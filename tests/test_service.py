@@ -1,6 +1,6 @@
-from typeset.config import Provider
-from typeset.schemas import DocumentPlan, DocumentSection
-from typeset.service import create_document_plan, create_pdf_from_text
+from pdf_it.config import Provider
+from pdf_it.schemas import DocumentPlan, DocumentSection
+from pdf_it.service import create_document_plan, create_pdf_from_text
 
 
 def sample_plan() -> DocumentPlan:

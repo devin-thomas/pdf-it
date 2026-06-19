@@ -5,6 +5,7 @@ def test_app_starts_dark_with_generation_disabled() -> None:
     app = AppTest.from_file("app.py").run(timeout=20)
     assert not app.exception
     assert app.session_state.theme == "dark"
+    assert any(">pdf-it<" in element.value for element in app.markdown)
     assert len(app.text_area) == 2
     assert len(app.file_uploader) == 1
     assert app.button[0].disabled

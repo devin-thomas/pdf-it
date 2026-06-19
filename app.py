@@ -1,4 +1,4 @@
-"""Streamlit entrypoint for the Typeset document generator."""
+"""Streamlit entrypoint for the pdf-it document generator."""
 
 # Embedded CSS is intentionally kept beside its selectors for easier visual maintenance.
 # ruff: noqa: E501
@@ -9,19 +9,19 @@ import re
 
 import streamlit as st
 
-from typeset.config import (
+from pdf_it.config import (
     MAX_INSTRUCTIONS_CHARACTERS,
     MAX_SOURCE_CHARACTERS,
     PROVIDER_CONFIGS,
     Provider,
 )
-from typeset.providers import ProviderRequestError
-from typeset.service import create_pdf_from_text
-from typeset.validation import InputValidationError, decode_text_upload
+from pdf_it.providers import ProviderRequestError
+from pdf_it.service import create_pdf_from_text
+from pdf_it.validation import InputValidationError, decode_text_upload
 
 st.set_page_config(
-    page_title="Typeset - AI document studio",
-    page_icon="T",
+    page_title="pdf-it - AI document studio",
+    page_icon="P",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -189,13 +189,13 @@ def install_theme(theme: str) -> None:
 
     # Dark Reader checks for this lock; the root CSS color-scheme styles native controls.
     st.html(
-        f'<meta name="darkreader-lock" content="Typeset provides a native {theme} theme.">'
+        f'<meta name="darkreader-lock" content="pdf-it provides a native {theme} theme.">'
     )
 
 
 def safe_filename(title: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60]
-    return f"{slug or 'typeset-document'}.pdf"
+    return f"{slug or 'pdf-it-document'}.pdf"
 
 
 if "theme" not in st.session_state:
@@ -203,7 +203,7 @@ if "theme" not in st.session_state:
 
 header_left, header_right = st.columns([8, 2], vertical_alignment="center")
 with header_left:
-    st.markdown('<div class="ts-brand">Typeset</div>', unsafe_allow_html=True)
+    st.markdown('<div class="ts-brand">pdf-it</div>', unsafe_allow_html=True)
 with header_right:
     light_mode = st.toggle("Light mode", value=st.session_state.theme == "light")
     st.session_state.theme = "light" if light_mode else "dark"
@@ -280,7 +280,7 @@ with rail:
         """
         <div class="ts-privacy">
         Your key stays in this active Streamlit session and is sent only to the provider you
-        select. Typeset does not write keys, source text, or generated PDFs to disk.
+        select. pdf-it does not write keys, source text, or generated PDFs to disk.
         </div>
         """,
         unsafe_allow_html=True,
@@ -314,7 +314,7 @@ if create_clicked:
         st.error(str(exc))
     except Exception:
         # Unexpected details can include SDK internals, so the UI intentionally stays generic.
-        st.error("Typeset could not finish this document. Please try again.")
+        st.error("pdf-it could not finish this document. Please try again.")
 
 if st.session_state.get("generated_pdf"):
     st.success(f"{st.session_state.generated_title} is ready.")
@@ -329,7 +329,7 @@ if st.session_state.get("generated_pdf"):
 st.markdown(
     """
     <footer class="ts-footer">
-      <span>Typeset - private by design, provider processing applies.</span>
+      <span>pdf-it - private by design, provider processing applies.</span>
       <span>Built with Streamlit, LangChain, and ReportLab.</span>
     </footer>
     """,

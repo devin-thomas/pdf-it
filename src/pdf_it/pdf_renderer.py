@@ -38,7 +38,7 @@ def _styles() -> dict[str, ParagraphStyle]:
     base = getSampleStyleSheet()
     return {
         "title": ParagraphStyle(
-            "TypesetTitle",
+            "PdfItTitle",
             parent=base["Title"],
             fontName="Times-Bold",
             fontSize=31,
@@ -48,7 +48,7 @@ def _styles() -> dict[str, ParagraphStyle]:
             spaceAfter=5 * mm,
         ),
         "subtitle": ParagraphStyle(
-            "TypesetSubtitle",
+            "PdfItSubtitle",
             parent=base["BodyText"],
             fontName="Helvetica",
             fontSize=12,
@@ -57,7 +57,7 @@ def _styles() -> dict[str, ParagraphStyle]:
             spaceAfter=8 * mm,
         ),
         "summary": ParagraphStyle(
-            "TypesetSummary",
+            "PdfItSummary",
             parent=base["BodyText"],
             fontName="Helvetica",
             fontSize=11,
@@ -65,7 +65,7 @@ def _styles() -> dict[str, ParagraphStyle]:
             textColor=INK,
         ),
         "heading": ParagraphStyle(
-            "TypesetHeading",
+            "PdfItHeading",
             parent=base["Heading2"],
             fontName="Times-Bold",
             fontSize=19,
@@ -76,7 +76,7 @@ def _styles() -> dict[str, ParagraphStyle]:
             keepWithNext=True,
         ),
         "body": ParagraphStyle(
-            "TypesetBody",
+            "PdfItBody",
             parent=base["BodyText"],
             fontName="Helvetica",
             fontSize=10.5,
@@ -87,7 +87,7 @@ def _styles() -> dict[str, ParagraphStyle]:
             allowOrphans=0,
         ),
         "callout": ParagraphStyle(
-            "TypesetCallout",
+            "PdfItCallout",
             parent=base["BodyText"],
             fontName="Helvetica-Bold",
             fontSize=10,
@@ -110,7 +110,7 @@ def _draw_page(canvas, document) -> None:
 
     canvas.setFillColor(MUTED)
     canvas.setFont("Helvetica-Bold", 7.5)
-    canvas.drawString(22 * mm, height - 13 * mm, "TYPESET")
+    canvas.drawString(22 * mm, height - 13 * mm, "PDF-IT")
 
     page_label = str(document.page)
     canvas.setFont("Helvetica", 8)
@@ -176,7 +176,7 @@ def render_document(plan: DocumentPlan) -> bytes:
         topMargin=27 * mm,
         bottomMargin=23 * mm,
         title=plan.title,
-        author="Typeset",
+        author="pdf-it",
         subject="AI-assisted document layout",
     )
     styles = _styles()

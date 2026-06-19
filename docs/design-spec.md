@@ -1,6 +1,6 @@
-# Typeset design specification
+# pdf-it design specification
 
-The accepted primary concept is `docs/typeset-dark-concept.png` at 1536 x 1024.
+The accepted primary concept is `docs/pdf-it-dark-concept.png` at 1536 x 1024.
 
 ## Visual system
 
@@ -22,7 +22,7 @@ The accepted primary concept is `docs/typeset-dark-concept.png` at 1536 x 1024.
 
 ## Visible-copy lock
 
-- Typeset
+- pdf-it
 - Turn plain text into a document worth sharing.
 - Source text
 - Creative direction (optional)

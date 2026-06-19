@@ -3,10 +3,15 @@ requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "typeset-ai"
+name = "pdf-it"
 version = "0.1.0"
 description = "Turn source text into polished PDFs with LangChain and Streamlit."
 requires-python = ">=3.12"
+
+[project.urls]
+Homepage = "https://github.com/devin-thomas/pdf-it"
+Repository = "https://github.com/devin-thomas/pdf-it"
+Issues = "https://github.com/devin-thomas/pdf-it/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

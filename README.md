@@ -1,10 +1,12 @@
-# Typeset
+# pdf-it
 
-Typeset turns up to 5,000 characters of source text into a structured, visually polished PDF.
+pdf-it turns up to 5,000 characters of source text into a structured, visually polished PDF.
 Users bring a Gemini, OpenAI, or Anthropic API key; LangChain requests a validated editorial
 plan, then ReportLab renders the document locally and deterministically.
 
-![Typeset dark interface concept](docs/typeset-dark-concept.png)
+The name is a light play on “f*** it”: drop in the text, choose a provider, and make the PDF.
+
+![pdf-it dark interface concept](docs/pdf-it-dark-concept.png)
 
 ## What it does
 
@@ -15,7 +17,7 @@ plan, then ReportLab renders the document locally and deterministically.
 - Starts in a native dark theme, offers a light theme, and signals Dark Reader not to invert it.
 - Keeps API keys in the active Streamlit session and never writes keys or documents to disk.
 
-Current defaults are centralized in `src/typeset/config.py`:
+Current defaults are centralized in `src/pdf_it/config.py`:
 
 | Provider | Model |
 | --- | --- |
@@ -47,7 +49,7 @@ for unrelated tooling, copy `.env.example` to `.env`; `.env` is ignored by Git.
 
 1. Open [Google AI Studio](https://aistudio.google.com/app/apikey).
 2. Sign in and select **Create API key**.
-3. Paste the key into Typeset after selecting Gemini.
+3. Paste the key into pdf-it after selecting Gemini.
 
 Google controls free-tier availability and limits, so review the terms shown in AI Studio.
 
@@ -55,7 +57,7 @@ Google controls free-tier availability and limits, so review the terms shown in 
 
 ```powershell
 python -m ruff check .
-python -m pytest --cov=typeset
+python -m pytest --cov=pdf_it
 ```
 
 The focused suite covers validation, UTF-8 uploads, provider routing, prompt boundaries,
@@ -90,16 +92,16 @@ Browser PDF download
 ```
 
 - `app.py` owns only UI and session behavior.
-- `src/typeset/providers.py` constructs short-lived provider clients without global key state.
-- `src/typeset/prompts.py` treats source content as data and prohibits unsupported inventions.
-- `src/typeset/schemas.py` constrains model output before rendering.
-- `src/typeset/pdf_renderer.py` escapes model text and builds the PDF without HTML conversion.
-- `src/typeset/service.py` coordinates the provider-neutral workflow.
+- `src/pdf_it/providers.py` constructs short-lived provider clients without global key state.
+- `src/pdf_it/prompts.py` treats source content as data and prohibits unsupported inventions.
+- `src/pdf_it/schemas.py` constrains model output before rendering.
+- `src/pdf_it/pdf_renderer.py` escapes model text and builds the PDF without HTML conversion.
+- `src/pdf_it/service.py` coordinates the provider-neutral workflow.
 
 ## Privacy and security
 
 Source text and the API key are necessarily sent to the selected AI provider. They also exist in
-the active Streamlit server session while the page is open. Typeset does not add persistence,
+the active Streamlit server session while the page is open. pdf-it does not add persistence,
 analytics, application logging, or server-side files. Provider retention and training policies
 still apply; do not submit material that the chosen provider is not permitted to process.
 

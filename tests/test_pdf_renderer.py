@@ -2,8 +2,8 @@ from io import BytesIO
 
 from pypdf import PdfReader
 
-from typeset.pdf_renderer import render_document
-from typeset.schemas import DocumentPlan, DocumentSection
+from pdf_it.pdf_renderer import render_document
+from pdf_it.schemas import DocumentPlan, DocumentSection
 
 
 def test_pdf_is_valid_searchable_and_escapes_markup() -> None:
@@ -32,6 +32,7 @@ def test_pdf_is_valid_searchable_and_escapes_markup() -> None:
 
     assert payload.startswith(b"%PDF-")
     assert reader.metadata.title == plan.title
+    assert reader.metadata.author == "pdf-it"
     assert "Research & Results <2026>" in text
     assert "<b>source text</b>" in text
     assert "Next steps" in text
@@ -56,4 +57,4 @@ def test_long_document_paginates_with_page_labels() -> None:
 
     reader = PdfReader(BytesIO(render_document(plan)))
     assert len(reader.pages) >= 3
-    assert "TYPESET" in (reader.pages[-1].extract_text() or "")
+    assert "PDF-IT" in (reader.pages[-1].extract_text() or "")

@@ -1,4 +1,4 @@
-"""Typeset application package."""
+"""pdf-it application package."""
 
 from .service import create_pdf_from_text
 

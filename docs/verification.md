@@ -5,7 +5,7 @@ Last verified: June 19, 2026
 ## Automated checks
 
 - `python -m ruff check .`: passed.
-- `python -m pytest --cov=typeset --cov-fail-under=90`: 17 tests passed.
+- `python -m pytest --cov=pdf_it --cov-fail-under=90`: 17 tests passed.
 - Core package statement coverage: 96%.
 - `python -m pip check`: no broken requirements.
 - Tracked-file credential scan: no supplied test credential or private-key material found.
@@ -28,7 +28,7 @@ tests.
 
 ## Visual checks
 
-- The accepted interface concept is `docs/typeset-dark-concept.png`.
+- The accepted interface concept is `docs/pdf-it-dark-concept.png`.
 - The live Streamlit app was inspected in the in-app browser at a 1280 x 720 desktop viewport.
 - Layout, visible copy, native dark palette, writing surface, provider controls, focus treatment,
   upload surface, privacy copy, and disabled action state were compared to the concept.

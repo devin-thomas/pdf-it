@@ -1,7 +1,7 @@
 import pytest
 
-from typeset.config import PROVIDER_CONFIGS, Provider
-from typeset.providers import ProviderRequestError, build_chat_model, safe_provider_error
+from pdf_it.config import PROVIDER_CONFIGS, Provider
+from pdf_it.providers import ProviderRequestError, build_chat_model, safe_provider_error
 
 
 @pytest.mark.parametrize(

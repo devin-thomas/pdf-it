@@ -1,7 +1,7 @@
 import pytest
 
-from typeset.config import MAX_INSTRUCTIONS_CHARACTERS, MAX_SOURCE_CHARACTERS, MAX_UPLOAD_BYTES
-from typeset.validation import (
+from pdf_it.config import MAX_INSTRUCTIONS_CHARACTERS, MAX_SOURCE_CHARACTERS, MAX_UPLOAD_BYTES
+from pdf_it.validation import (
     InputValidationError,
     combine_source_text,
     decode_text_upload,
