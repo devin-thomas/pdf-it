@@ -86,6 +86,8 @@ def install_theme(theme: str) -> None:
         .ts-rule {{ border: 0; border-top: 1px solid var(--ts-rule); margin: 1.1rem 0 2.6rem; }}
         .ts-hero h1 {{
             color: var(--ts-text);
+            font-family: 'Libre Caslon Display', Georgia, serif;
+            font-weight: 400;
             font-size: clamp(2.8rem, 5.2vw, 5.2rem);
             line-height: 1.01;
             max-width: 900px;
@@ -151,6 +153,11 @@ def install_theme(theme: str) -> None:
         }}
         [data-testid='stRadio'] label:first-child {{ border-radius: .45rem 0 0 .45rem; }}
         [data-testid='stRadio'] label:last-child {{ border-radius: 0 .45rem .45rem 0; }}
+        [data-testid='stRadio'] label:has(input:checked) {{
+            background: var(--ts-accent);
+            border-color: var(--ts-accent);
+        }}
+        [data-testid='stRadio'] label:has(input:checked) p {{ color: white; }}
         .stButton > button, .stDownloadButton > button {{
             min-height: 3.25rem;
             border-radius: .45rem;
