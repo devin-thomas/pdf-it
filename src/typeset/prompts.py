@@ -18,7 +18,9 @@ Rules:
 
 
 def build_messages(source: str, instructions: str) -> list[SystemMessage | HumanMessage]:
-    direction = instructions or "Use sound editorial judgment for tone, audience, and structure."
+    direction = instructions or (
+        "Use sound editorial judgment for tone, audience, and structure."
+    )
     return [
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(
