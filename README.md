@@ -60,6 +60,7 @@ python -m pytest --cov=typeset
 
 The focused suite covers validation, UTF-8 uploads, provider routing, prompt boundaries,
 structured output, PDF pagination/searchability, markup escaping, and Streamlit state.
+See [docs/verification.md](docs/verification.md) for the latest manual and live-provider checks.
 
 ## Deploy to Streamlit Community Cloud
 
