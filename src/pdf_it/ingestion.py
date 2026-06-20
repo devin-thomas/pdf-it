@@ -8,12 +8,12 @@ import mimetypes
 import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from importlib import import_module
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 import pandas as pd
-import udoc
 from google import genai
 from google.genai import types as genai_types
 from openai import OpenAI
@@ -238,13 +238,93 @@ def combine_source_segments(segments: Sequence[SourceSegment]) -> str:
 
 
 def extract_document_text(name: str, data: bytes) -> str:
-    """Use udoc to extract text from document-style uploads."""
+    """Extract document text without crashing when optional parsers are absent."""
+    extension = normalized_extension(name)
+    if extension == ".pdf":
+        return extract_pdf_text(name, data)
+    if extension == ".docx":
+        return extract_docx_text(name, data)
+    if extension == ".doc":
+        return extract_legacy_doc_text(name, data)
+
+    raise InputValidationError(
+        f"`{name}` is not a supported document upload yet. "
+        "Try exporting it as `.pdf` or `.docx`."
+    )
+
+
+def extract_pdf_text(name: str, data: bytes) -> str:
+    """Read searchable PDF text with pypdf."""
+    try:
+        from pypdf import PdfReader
+
+        reader = PdfReader(io.BytesIO(data))
+    except Exception as exc:  # pragma: no cover - parser-specific failure details vary.
+        raise InputValidationError(
+            f"pdf-it could not read `{name}` as a PDF. Try exporting it again and re-uploading."
+        ) from exc
+
+    blocks = []
+    for page in reader.pages:
+        text = (page.extract_text() or "").strip()
+        if text:
+            blocks.append(text)
+    if not blocks:
+        raise InputValidationError(f"`{name}` did not contain extractable text.")
+    return "\n\n".join(blocks)
+
+
+def extract_docx_text(name: str, data: bytes) -> str:
+    """Read DOCX text using python-docx."""
+    try:
+        from docx import Document
+
+        document = Document(io.BytesIO(data))
+    except Exception as exc:  # pragma: no cover - parser-specific failure details vary.
+        raise InputValidationError(
+            f"pdf-it could not read `{name}` as a Word document. "
+            "Try exporting it again and re-uploading."
+        ) from exc
+
+    blocks = [
+        paragraph.text.strip()
+        for paragraph in document.paragraphs
+        if paragraph.text.strip()
+    ]
+    for table in document.tables:
+        for row in table.rows:
+            cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+            if cells:
+                blocks.append(" | ".join(cells))
+    if not blocks:
+        raise InputValidationError(f"`{name}` did not contain extractable text.")
+    return "\n\n".join(blocks)
+
+
+def load_udoc():
+    """Import the optional legacy document parser when it is available."""
+    try:
+        return import_module("udoc")
+    except ModuleNotFoundError:
+        return None
+
+
+def extract_legacy_doc_text(name: str, data: bytes) -> str:
+    """Read older `.doc` files only when the optional parser is present."""
+    udoc = load_udoc()
+    if udoc is None:
+        raise InputValidationError(
+            f"`{name}` is an older `.doc` file, which is not available in this deployment. "
+            "Save it as `.docx` or `.pdf` and upload it again."
+        )
+
     try:
         document = udoc.extract_bytes(data)
-    except Exception as exc:  # pragma: no cover - exact udoc failures are data-specific.
+    except Exception as exc:  # pragma: no cover - legacy parser failures vary by file.
         raise InputValidationError(
             f"pdf-it could not read `{name}`. Try exporting it again and re-uploading."
         ) from exc
+
     blocks = [block.text.strip() for block in document.blocks() if block.text.strip()]
     if not blocks:
         raise InputValidationError(f"`{name}` did not contain extractable text.")

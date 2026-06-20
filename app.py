@@ -32,7 +32,7 @@ st.set_page_config(
 
 UPLOAD_SIZE_MB = MAX_UPLOAD_BYTES // 1_000_000
 UPLOAD_FORMAT_SUMMARY = (
-    "TXT • MD • Markdown • MDX • PDF • DOC • DOCX • GDOC • CSV • XLSX • code • audio"
+    "TXT • MD • Markdown • MDX • PDF • DOCX • GDOC • CSV • XLSX • code • audio"
 )
 
 
@@ -395,7 +395,7 @@ with editor:
         accept_multiple_files=True,
         max_upload_size=UPLOAD_SIZE_MB,
         help=(
-            "Mix up to 5 files: TXT, MD, Markdown, MDX, PDF, DOC, DOCX, GDOC, CSV, "
+            "Mix up to 5 files: TXT, MD, Markdown, MDX, PDF, DOCX, GDOC, CSV, "
             "XLSX, common code files, or audio for transcription. Each file can be up "
             "to 10 MB."
         ),

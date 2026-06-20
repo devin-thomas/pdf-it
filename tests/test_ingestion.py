@@ -1,4 +1,8 @@
+import io
+
 import pytest
+from docx import Document
+from reportlab.pdfgen import canvas
 
 from pdf_it.config import MAX_SOURCE_CHARACTERS, Provider
 from pdf_it.ingestion import (
@@ -8,6 +12,26 @@ from pdf_it.ingestion import (
     prepare_source_text,
 )
 from pdf_it.validation import InputValidationError
+
+
+def render_pdf_bytes(*lines: str) -> bytes:
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer)
+    height = 780
+    for line in lines:
+        pdf.drawString(72, height, line)
+        height -= 18
+    pdf.save()
+    return buffer.getvalue()
+
+
+def render_docx_bytes(*paragraphs: str) -> bytes:
+    document = Document()
+    for paragraph in paragraphs:
+        document.add_paragraph(paragraph)
+    buffer = io.BytesIO()
+    document.save(buffer)
+    return buffer.getvalue()
 
 
 def test_prepare_source_text_combines_typed_and_uploaded_sources() -> None:
@@ -53,6 +77,50 @@ def test_extract_upload_text_supports_csv_via_dataframe_rendering() -> None:
 
     assert "Rows: 2, Columns: 2" in result
     assert "Ava" in result
+
+
+def test_extract_upload_text_supports_pdf_via_pypdf() -> None:
+    result = extract_upload_text(
+        SourceUpload(
+            name="brief.pdf",
+            data=render_pdf_bytes("Quarterly summary", "Revenue up"),
+        ),
+        Provider.GEMINI,
+        "unit-test-key",
+        "gemini-3.5-flash",
+    )
+
+    assert "Quarterly summary" in result
+    assert "Revenue up" in result
+
+
+def test_extract_upload_text_supports_docx_via_python_docx() -> None:
+    result = extract_upload_text(
+        SourceUpload(
+            name="brief.docx",
+            data=render_docx_bytes("First paragraph", "Second note"),
+        ),
+        Provider.GEMINI,
+        "unit-test-key",
+        "gemini-3.5-flash",
+    )
+
+    assert "First paragraph" in result
+    assert "Second note" in result
+
+
+def test_extract_upload_text_rejects_legacy_doc_without_optional_parser(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("pdf_it.ingestion.load_udoc", lambda: None)
+
+    with pytest.raises(InputValidationError, match="Save it as `.docx` or `.pdf`"):
+        extract_upload_text(
+            SourceUpload(name="legacy.doc", data=b"placeholder"),
+            Provider.GEMINI,
+            "unit-test-key",
+            "gemini-3.5-flash",
+        )
 
 
 @pytest.mark.parametrize(

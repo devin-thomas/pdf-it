@@ -11,7 +11,7 @@ The name is a light play on “f*** it”: drop in the text, choose a provider, 
 ## What it does
 
 - Accepts pasted text plus up to 5 uploaded files in one request.
-- Supports TXT, Markdown, PDF, DOCX, DOC, GDOC, CSV, XLSX, common code files, and audio uploads.
+- Supports TXT, Markdown, PDF, DOCX, GDOC, CSV, XLSX, common code files, and audio uploads.
 - Pulls YouTube transcripts from captioned links when available.
 - Adds optional audience, tone, structure, and emphasis guidance.
 - Lets users choose a provider-specific model in the UI.
