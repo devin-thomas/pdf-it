@@ -20,7 +20,7 @@ def test_requires_at_least_one_source(typed: str, uploaded: str) -> None:
 
 
 def test_rejects_combined_source_over_limit() -> None:
-    with pytest.raises(InputValidationError, match="5,000"):
+    with pytest.raises(InputValidationError, match="30,000"):
         combine_source_text("x" * MAX_SOURCE_CHARACTERS, "one extra character")
 
 
@@ -28,7 +28,7 @@ def test_decodes_utf8_bom_and_rejects_invalid_uploads() -> None:
     assert decode_text_upload(b"\xef\xbb\xbfHello") == "Hello"
     with pytest.raises(InputValidationError, match="UTF-8"):
         decode_text_upload(b"\xff\xfe")
-    with pytest.raises(InputValidationError, match="1 MB"):
+    with pytest.raises(InputValidationError, match="10 MB"):
         decode_text_upload(b"x" * (MAX_UPLOAD_BYTES + 1))
 
 

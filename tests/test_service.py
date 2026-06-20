@@ -1,6 +1,7 @@
 from pdf_it.config import Provider
+from pdf_it.ingestion import SourceUpload
 from pdf_it.schemas import DocumentPlan, DocumentSection
-from pdf_it.service import create_document_plan, create_pdf_from_text
+from pdf_it.service import create_document_plan, create_pdf_from_sources, create_pdf_from_text
 
 
 def sample_plan() -> DocumentPlan:
@@ -56,3 +57,22 @@ def test_end_to_end_service_with_injected_model() -> None:
     assert pdf.startswith(b"%PDF-")
     assert len(pdf) > 1_000
     assert plan.title == "A Clear Document"
+
+
+def test_mixed_source_service_path_with_injected_model() -> None:
+    model = FakeStructuredModel(sample_plan())
+    pdf, plan, prepared = create_pdf_from_sources(
+        "Typed fact",
+        [SourceUpload(name="notes.md", data=b"# Heading\n\nExtra detail")],
+        [],
+        "Be concise",
+        Provider.GEMINI,
+        "unused-because-model-is-injected",
+        "gemini-3.5-flash",
+        model=model,
+    )
+
+    assert pdf.startswith(b"%PDF-")
+    assert plan.title == "A Clear Document"
+    assert prepared.source_count == 2
+    assert "[Source: notes.md]" in model.messages[1].content

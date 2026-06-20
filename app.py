@@ -12,18 +12,27 @@ import streamlit as st
 from pdf_it.config import (
     MAX_INSTRUCTIONS_CHARACTERS,
     MAX_SOURCE_CHARACTERS,
+    MAX_SOURCE_UPLOADS,
+    MAX_UPLOAD_BYTES,
+    MAX_YOUTUBE_LINKS,
     PROVIDER_CONFIGS,
     Provider,
 )
+from pdf_it.ingestion import SourceUpload
 from pdf_it.providers import ProviderRequestError
-from pdf_it.service import create_pdf_from_text
-from pdf_it.validation import InputValidationError, decode_text_upload
+from pdf_it.service import create_pdf_from_sources
+from pdf_it.validation import InputValidationError
 
 st.set_page_config(
     page_title="pdf-it - AI document studio",
     page_icon="P",
     layout="wide",
     initial_sidebar_state="collapsed",
+)
+
+UPLOAD_SIZE_MB = MAX_UPLOAD_BYTES // 1_000_000
+UPLOAD_FORMAT_SUMMARY = (
+    "TXT • MD • Markdown • MDX • PDF • DOC • DOCX • GDOC • CSV • XLSX • code • audio"
 )
 
 
@@ -125,7 +134,8 @@ def install_theme(theme: str) -> None:
             justify-content: space-between;
         }}
         [data-testid='stTextArea'] textarea,
-        [data-testid='stTextInput'] input {{
+        [data-testid='stTextInput'] input,
+        [data-testid='stSelectbox'] div[data-baseweb='select'] > div {{
             background: var(--ts-field);
             color: var(--ts-text);
             border: 1px solid var(--ts-rule);
@@ -149,15 +159,37 @@ def install_theme(theme: str) -> None:
             background: var(--ts-surface);
             border: 1px solid var(--ts-rule);
             margin-right: -1px;
-            padding: .62rem .9rem;
+            min-height: 4.1rem;
+            padding: .72rem .9rem;
         }}
         [data-testid='stRadio'] label:first-child {{ border-radius: .45rem 0 0 .45rem; }}
         [data-testid='stRadio'] label:last-child {{ border-radius: 0 .45rem .45rem 0; }}
+        [data-testid='stRadio'] p {{ font-weight: 600; }}
         [data-testid='stRadio'] label:has(input:checked) {{
             background: var(--ts-accent);
             border-color: var(--ts-accent);
         }}
         [data-testid='stRadio'] label:has(input:checked) p {{ color: white; }}
+        [data-testid='stSegmentedControl'] {{
+            display: flex;
+            justify-content: flex-end;
+        }}
+        [data-testid='stSegmentedControl'] [role='radiogroup'] {{
+            gap: 0;
+            border: 1px solid var(--ts-rule);
+            border-radius: 999px;
+            padding: .15rem;
+            background: var(--ts-surface);
+        }}
+        [data-testid='stSegmentedControl'] [role='radio'] {{
+            border-radius: 999px;
+            min-height: 2.2rem;
+            padding: 0 .9rem;
+        }}
+        [data-testid='stSegmentedControl'] [role='radio'][aria-checked='true'] {{
+            background: var(--ts-accent);
+            color: white;
+        }}
         .stButton > button, .stDownloadButton > button {{
             min-height: 3.25rem;
             border-radius: .45rem;
@@ -173,11 +205,38 @@ def install_theme(theme: str) -> None:
         .stButton > button[kind='primary']:not(:disabled):hover,
         .stDownloadButton > button:hover {{ transform: translateY(-1px); box-shadow: 0 8px 26px rgba(47,109,246,.23); }}
         .stLinkButton a {{ color: #5590ff; padding-left: 0; }}
+        .st-key-gemini-help-open button,
+        .st-key-gemini-help-close button {{
+            min-height: 2.15rem;
+            width: 2.15rem;
+            border-radius: 999px;
+            padding: 0;
+            font-size: .82rem;
+            font-weight: 700;
+            color: var(--ts-muted);
+        }}
+        .st-key-gemini-help-open button:hover,
+        .st-key-gemini-help-close button:hover {{
+            color: var(--ts-text);
+        }}
+        .st-key-gemini-help-done button {{ min-height: 3.2rem; font-weight: 700; }}
+        .ts-help-note {{
+            color: var(--ts-muted);
+            font-size: .92rem;
+            line-height: 1.55;
+        }}
+        .ts-progress-note {{
+            color: var(--ts-muted);
+            font-size: .86rem;
+            margin-top: .3rem;
+        }}
         div[data-testid='stAlert'] {{ background: var(--ts-surface-2); border-color: var(--ts-rule); color: var(--ts-text); }}
         @media (max-width: 800px) {{
             .block-container {{ padding: 1.35rem 1.1rem 2rem; }}
             .ts-rule {{ margin-bottom: 1.8rem; }}
             .ts-hero h1 {{ font-size: 2.75rem; }}
+            [data-testid='stSegmentedControl'] {{ justify-content: flex-start; }}
+            [data-testid='stSegmentedControl'] [role='radio'] {{ padding: 0 .72rem; }}
             [data-testid='stColumn']:has(.ts-rail-marker) {{ border-left: 0; border-top: 1px solid var(--ts-rule); padding: 1.5rem 0 0; margin-top: 1rem; }}
             .ts-footer {{ gap: 1rem; align-items: flex-start; flex-direction: column; }}
         }}
@@ -198,26 +257,71 @@ def safe_filename(title: str) -> str:
     return f"{slug or 'pdf-it-document'}.pdf"
 
 
+@st.dialog("Get a Gemini API key")
+def show_gemini_help_dialog() -> None:
+    _, close_column = st.columns([8, 1], vertical_alignment="center")
+    with close_column:
+        if st.button("X", key="gemini-help-close", help="Close this help pop-up."):
+            st.session_state.show_gemini_help = False
+            st.rerun()
+
+    st.markdown(
+        "1. Open Google AI Studio from the Gemini key button.\n"
+        "2. Sign in with the Google account you want to use for Gemini API access.\n"
+        "3. Go to the **API keys** page and choose **Create API key**.\n"
+        "4. If Google asks you to choose a project, pick the one you want the key tied to.\n"
+        "5. Copy the key that starts with `AIza` and paste it into pdf-it."
+    )
+    st.markdown(
+        """
+        <div class="ts-help-note">
+        Free-tier Gemini API usage is subject to Google's data collection and provider terms, so do not
+        send content your Google account is not permitted to process.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.link_button(
+        "Google's official Gemini API key help",
+        PROVIDER_CONFIGS[Provider.GEMINI].help_url,
+        use_container_width=True,
+    )
+    if st.button("Done", key="gemini-help-done", type="primary", use_container_width=True):
+        st.session_state.show_gemini_help = False
+        st.rerun()
+
+
 if "theme" not in st.session_state:
     st.session_state.theme = "dark"
+if "theme_choice" not in st.session_state:
+    st.session_state.theme_choice = "Dark" if st.session_state.theme == "dark" else "Light"
+if "show_gemini_help" not in st.session_state:
+    st.session_state.show_gemini_help = False
 
-header_left, header_right = st.columns([8, 2], vertical_alignment="center")
+header_left, header_right = st.columns([6.5, 3.5], vertical_alignment="center")
 with header_left:
     st.markdown('<div class="ts-brand">pdf-it</div>', unsafe_allow_html=True)
 with header_right:
-    light_mode = st.toggle("Light mode", value=st.session_state.theme == "light")
-    st.session_state.theme = "light" if light_mode else "dark"
+    selected_theme = st.segmented_control(
+        "Theme mode",
+        ("Light", "Dark"),
+        key="theme_choice",
+        label_visibility="collapsed",
+        width="content",
+    )
+    st.session_state.theme = (selected_theme or "Dark").lower()
 
 install_theme(st.session_state.theme)
+if st.session_state.show_gemini_help:
+    show_gemini_help_dialog()
 st.markdown('<hr class="ts-rule">', unsafe_allow_html=True)
-st.markdown(
+st.html(
     """
     <section class="ts-hero">
       <h1>Turn plain text into a document worth sharing.</h1>
       <p>Add your source, shape the direction, and let AI organize it into a polished PDF.</p>
     </section>
-    """,
-    unsafe_allow_html=True,
+    """
 )
 
 editor, rail = st.columns([1.72, 0.88], gap="large", vertical_alignment="top")
@@ -228,15 +332,33 @@ with editor:
         height=270,
         max_chars=MAX_SOURCE_CHARACTERS,
         placeholder="Paste your text here...",
-        help="Typed and uploaded text share the 5,000-character limit.",
+        help=(
+            "Typed text has its own 30,000-character editor limit. Uploaded files and "
+            "transcripts are processed separately and may be trimmed later if the "
+            "combined working source exceeds the model budget."
+        ),
     )
     st.caption(f"{len(typed_text):,} / {MAX_SOURCE_CHARACTERS:,} typed characters")
-    uploaded_file = st.file_uploader(
-        "Or add a TXT file",
-        type=["txt"],
-        accept_multiple_files=False,
-        help="UTF-8 text only, up to 1 MB. If both inputs are present, they are combined.",
+    uploaded_files = st.file_uploader(
+        "Add source files",
+        accept_multiple_files=True,
+        max_upload_size=UPLOAD_SIZE_MB,
+        help=(
+            "Mix up to 5 files: TXT, MD, Markdown, MDX, PDF, DOC, DOCX, GDOC, CSV, "
+            "XLSX, common code files, or audio for transcription. Each file can be up "
+            "to 10 MB."
+        ),
     )
+    st.caption(
+        f"{len(uploaded_files)} / {MAX_SOURCE_UPLOADS} files selected • {UPLOAD_SIZE_MB} MB each • {UPLOAD_FORMAT_SUMMARY}"
+    )
+    youtube_links = st.text_area(
+        "YouTube transcript links (optional)",
+        height=96,
+        placeholder="Paste up to 5 YouTube links, one per line...",
+        help="pdf-it will try to pull captions or auto-generated transcripts from the provided links.",
+    )
+    st.caption(f"Up to {MAX_YOUTUBE_LINKS} YouTube links can be imported per document.")
     instructions = st.text_area(
         "Creative direction (optional)",
         height=128,
@@ -261,20 +383,39 @@ with rail:
         placeholder=f"Starts with {provider_config.key_prefix}",
         autocomplete="off",
     )
+    model_options = provider_config.models
+    default_model_index = next(
+        index
+        for index, option in enumerate(model_options)
+        if option.id == provider_config.default_model
+    )
+    selected_model = st.selectbox(
+        "Model",
+        options=model_options,
+        index=default_model_index,
+        format_func=lambda option: option.label,
+        key=f"{selected_provider.value.lower()}-model",
+    )
+    st.caption(selected_model.description)
     if selected_provider is Provider.GEMINI:
-        st.link_button(
-            "Get a free Gemini API key",
-            provider_config.key_help_url,
-            help="Opens Google AI Studio in a new tab.",
-        )
-        with st.expander("How to get a free Gemini key"):
-            st.markdown(
-                "1. Open Google AI Studio with the link above.\n"
-                "2. Sign in and choose **Create API key**.\n"
-                "3. Copy it here. Review Google's current free-tier limits before use."
+        key_link, help_button = st.columns([5.3, 0.75], gap="small", vertical_alignment="center")
+        with key_link:
+            st.link_button(
+                "Get a free Gemini API key",
+                provider_config.key_help_url,
+                help="Opens Google AI Studio in a new tab.",
+                use_container_width=True,
             )
+        with help_button:
+            if st.button("?", key="gemini-help-open", help="How to get a Gemini API key."):
+                st.session_state.show_gemini_help = True
+                st.rerun()
     else:
-        st.link_button(f"Manage {selected_provider.value} API keys", provider_config.key_help_url)
+        st.link_button(
+            f"Manage {selected_provider.value} API keys",
+            provider_config.key_help_url,
+            use_container_width=True,
+        )
 
     st.markdown(
         """
@@ -286,7 +427,8 @@ with rail:
         unsafe_allow_html=True,
     )
 
-    has_source = bool(typed_text.strip() or uploaded_file)
+    youtube_url_list = [line.strip() for line in youtube_links.splitlines() if line.strip()]
+    has_source = bool(typed_text.strip() or uploaded_files or youtube_url_list)
     create_clicked = st.button(
         "Create PDF",
         type="primary",
@@ -297,22 +439,45 @@ with rail:
         st.caption("Add source text and an API key to get started.")
 
 if create_clicked:
+    progress_bar = st.progress(0, text="Preparing your document request...")
+    progress_note = st.empty()
+
+    def report_progress(message: str, percent: int) -> None:
+        progress_bar.progress(min(max(percent, 1), 100), text=message)
+        progress_note.markdown(
+            f'<div class="ts-progress-note">{message}</div>',
+            unsafe_allow_html=True,
+        )
+
     try:
-        uploaded_text = decode_text_upload(uploaded_file.getvalue()) if uploaded_file else ""
-        with st.spinner(f"{selected_provider.value} is shaping your document..."):
-            pdf_bytes, plan = create_pdf_from_text(
-                typed_text,
-                uploaded_text,
-                instructions,
-                selected_provider,
-                api_key,
-            )
+        uploads = [
+            SourceUpload(name=uploaded.name, data=uploaded.getvalue()) for uploaded in uploaded_files
+        ]
+        pdf_bytes, plan, _prepared = create_pdf_from_sources(
+            typed_text,
+            uploads,
+            youtube_url_list,
+            instructions,
+            selected_provider,
+            api_key,
+            selected_model.id,
+            progress=report_progress,
+        )
         st.session_state.generated_pdf = pdf_bytes
         st.session_state.generated_filename = safe_filename(plan.title)
         st.session_state.generated_title = plan.title
+        progress_bar.progress(100, text="PDF ready.")
+        progress_note.markdown(
+            '<div class="ts-progress-note">The source review, AI planning, and PDF rendering are complete.</div>',
+            unsafe_allow_html=True,
+        )
     except (InputValidationError, ProviderRequestError) as exc:
+        progress_bar.empty()
+        progress_note.empty()
         st.error(str(exc))
     except Exception:
+        progress_bar.empty()
+        progress_note.empty()
         # Unexpected details can include SDK internals, so the UI intentionally stays generic.
         st.error("pdf-it could not finish this document. Please try again.")
 

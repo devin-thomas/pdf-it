@@ -13,10 +13,10 @@ The accepted primary concept is `docs/pdf-it-dark-concept.png` at 1536 x 1024.
 
 ## Interaction inventory
 
-- Dark/light theme switch with native color-scheme metadata and a Dark Reader lock signal.
-- Source text area, live 5,000-character limit, and TXT upload drop zone.
+- Two-sided light/dark theme switch with native color-scheme metadata and a Dark Reader lock signal.
+- Source text area with a live 30,000-character editor limit plus mixed-file uploads up to 10 MB each.
 - Optional creative-direction field.
-- Gemini, OpenAI, and Claude provider selector with masked API-key input.
+- Gemini, OpenAI, and Claude provider selector with masked API-key input and a compact Gemini help affordance.
 - Gemini key setup link, session-only privacy note, generate action, and PDF download state.
 - Mobile layout collapses to one column without horizontal overflow.
 

@@ -1,6 +1,6 @@
 import pytest
 
-from pdf_it.config import PROVIDER_CONFIGS, Provider
+from pdf_it.config import Provider
 from pdf_it.providers import ProviderRequestError, build_chat_model, safe_provider_error
 
 
@@ -26,10 +26,10 @@ def test_routes_key_to_selected_provider(
 
     module = __import__(module_name)
     monkeypatch.setattr(module, class_name, fake_client)
-    result = build_chat_model(provider, "unit-test-key")
+    result = build_chat_model(provider, "unit-test-key", "custom-model")
 
     assert result["api_key"] == "unit-test-key"
-    assert result["model"] == PROVIDER_CONFIGS[provider].model
+    assert result["model"] == "custom-model"
 
 
 def test_missing_key_and_safe_errors_do_not_reflect_provider_details() -> None:
@@ -40,3 +40,6 @@ def test_missing_key_and_safe_errors_do_not_reflect_provider_details() -> None:
     safe = safe_provider_error(original)
     assert "unit-test-sensitive-value" not in str(safe)
     assert "rejected" in str(safe)
+
+    model_error = RuntimeError("model access denied for gpt-5.5")
+    assert "selected model" in str(safe_provider_error(model_error))

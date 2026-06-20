@@ -14,7 +14,7 @@ class InputValidationError(ValueError):
 def decode_text_upload(data: bytes) -> str:
     """Decode a small UTF-8 text upload without guessing legacy encodings."""
     if len(data) > MAX_UPLOAD_BYTES:
-        raise InputValidationError("The uploaded file must be 1 MB or smaller.")
+        raise InputValidationError("The uploaded file must be 10 MB or smaller.")
     try:
         return data.decode("utf-8-sig")
     except UnicodeDecodeError as exc:

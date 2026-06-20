@@ -1,8 +1,8 @@
 # pdf-it
 
-pdf-it turns up to 5,000 characters of source text into a structured, visually polished PDF.
-Users bring a Gemini, OpenAI, or Anthropic API key; LangChain requests a validated editorial
-plan, then ReportLab renders the document locally and deterministically.
+pdf-it turns mixed source material into a structured, visually polished PDF. Users can combine
+free text, up to 5 uploaded files, and YouTube transcript links; LangChain requests a validated
+editorial plan, then ReportLab renders the document locally and deterministically.
 
 The name is a light play on “f*** it”: drop in the text, choose a provider, and make the PDF.
 
@@ -10,9 +10,14 @@ The name is a light play on “f*** it”: drop in the text, choose a provider, 
 
 ## What it does
 
-- Accepts pasted text, a UTF-8 TXT upload, or both.
+- Accepts pasted text plus up to 5 uploaded files in one request.
+- Supports TXT, Markdown, PDF, DOCX, DOC, GDOC, CSV, XLSX, common code files, and audio uploads.
+- Pulls YouTube transcripts from captioned links when available.
 - Adds optional audience, tone, structure, and emphasis guidance.
+- Lets users choose a provider-specific model in the UI.
 - Supports Gemini, OpenAI, and Claude through separate LangChain integrations.
+- Uses pandas to convert CSV/XLSX uploads into dataframe-style text before prompting.
+- Transcribes audio with Gemini or OpenAI before document planning.
 - Produces searchable A4 PDFs with a title hierarchy, summary, sections, callouts, and pages.
 - Starts in a native dark theme, offers a light theme, and signals Dark Reader not to invert it.
 - Keeps API keys in the active Streamlit session and never writes keys or documents to disk.
@@ -25,8 +30,8 @@ Current defaults are centralized in `src/pdf_it/config.py`:
 | OpenAI | `gpt-5.4-mini` |
 | Anthropic | `claude-sonnet-4-6` |
 
-Model access and pricing vary by account. Change a default in one place if a provider retires
-or replaces a model.
+Model access and pricing vary by account, and each provider now exposes multiple selectable
+models in the UI. Change a default in one place if a provider retires or replaces a model.
 
 ## Run locally
 
@@ -51,7 +56,8 @@ for unrelated tooling, copy `.env.example` to `.env`; `.env` is ignored by Git.
 2. Sign in and select **Create API key**.
 3. Paste the key into pdf-it after selecting Gemini.
 
-Google controls free-tier availability and limits, so review the terms shown in AI Studio.
+Google controls free-tier availability and limits, and free-tier Gemini API usage is subject to
+Google data collection and provider terms. Review the latest terms shown in AI Studio.
 
 ## Test
 
@@ -72,9 +78,9 @@ See [docs/verification.md](docs/verification.md) for the latest manual and live-
 4. Do not add provider keys to Community Cloud secrets; users provide their own keys per session.
 5. After deployment, verify all three provider paths with separate low-risk sample text.
 
-The 1 MB upload limit is intentional. Streamlit Community Cloud installs `requirements.txt`,
-including the local package via `-e .`. The default theme is configured in
-`.streamlit/config.toml`.
+The app accepts uploads up to 10 MB per file. Streamlit Community Cloud installs
+`requirements.txt`, including the local package via `-e .`. The default theme and upload limit
+are configured in `.streamlit/config.toml`.
 
 ## Architecture
 
