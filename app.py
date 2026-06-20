@@ -82,7 +82,7 @@ def install_theme(theme: str) -> None:
         [data-testid='stHeader'] {{ background: transparent; }}
         [data-testid='stToolbar'] {{ visibility: hidden; }}
         [data-testid='stAppViewContainer'] > .main {{ background: transparent; }}
-        .block-container {{ max-width: 1360px; padding: 2rem 3rem 2.5rem; }}
+        .block-container {{ max-width: 1360px; padding: 1.15rem 3rem 2.5rem; }}
         h1, h2, h3, p, label, [data-testid='stCaptionContainer'] {{ color: var(--ts-text); }}
         h1, h2, h3 {{ font-family: 'Libre Caslon Display', Georgia, serif; letter-spacing: -.025em; }}
         .ts-brand {{
@@ -92,17 +92,40 @@ def install_theme(theme: str) -> None:
             line-height: 1;
             letter-spacing: -.035em;
         }}
-        .ts-rule {{ border: 0; border-top: 1px solid var(--ts-rule); margin: 1.1rem 0 2.6rem; }}
+        .ts-theme-label {{
+            color: var(--ts-muted);
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            line-height: 1;
+        }}
+        .ts-theme-label.is-active {{
+            color: var(--ts-text);
+        }}
+        .stVerticalBlock.st-key-theme-switch-row {{
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+            gap: .7rem;
+            flex-wrap: nowrap !important;
+        }}
+        .stVerticalBlock.st-key-theme-switch-row > div {{
+            width: auto !important;
+            flex: 0 0 auto !important;
+        }}
+        .ts-rule {{ border: 0; border-top: 1px solid var(--ts-rule); margin: .65rem 0 1.8rem; }}
         .ts-hero h1 {{
             color: var(--ts-text);
             font-family: 'Libre Caslon Display', Georgia, serif;
             font-weight: 400;
-            font-size: clamp(2.8rem, 5.2vw, 5.2rem);
-            line-height: 1.01;
-            max-width: 900px;
-            margin: 0 0 1rem;
+            font-size: clamp(2.35rem, 4.5vw, 4.45rem);
+            line-height: 1.03;
+            max-width: 760px;
+            margin: 0 0 .7rem;
         }}
-        .ts-hero p {{ color: var(--ts-muted); font-size: 1.06rem; max-width: 720px; margin-bottom: 2.4rem; }}
+        .ts-hero p {{ color: var(--ts-muted); font-size: 1rem; max-width: 640px; margin-bottom: 1.45rem; }}
         .ts-section-label {{
             color: var(--ts-muted);
             font-size: .72rem;
@@ -151,7 +174,7 @@ def install_theme(theme: str) -> None:
             background: var(--ts-surface-2);
             border: 1px dashed rgba(47,109,246,.78);
             border-radius: .45rem;
-            min-height: 8rem;
+            min-height: 6.6rem;
         }}
         [data-testid='stFileUploaderDropzone'] button {{ color: var(--ts-text); border-color: var(--ts-rule); }}
         [data-testid='stRadio'] > div {{ gap: 0; }}
@@ -170,25 +193,33 @@ def install_theme(theme: str) -> None:
             border-color: var(--ts-accent);
         }}
         [data-testid='stRadio'] label:has(input:checked) p {{ color: white; }}
-        [data-testid='stSegmentedControl'] {{
+        .st-key-theme-dark-enabled {{
             display: flex;
-            justify-content: flex-end;
+            justify-content: center;
         }}
-        [data-testid='stSegmentedControl'] [role='radiogroup'] {{
-            gap: 0;
-            border: 1px solid var(--ts-rule);
+        .st-key-theme-dark-enabled label[data-baseweb='checkbox'] {{
+            min-height: 2rem;
+        }}
+        .st-key-theme-dark-enabled div[data-testid='stWidgetLabel'] {{
+            display: none;
+        }}
+        .st-key-theme-dark-enabled [data-baseweb='checkbox'] > div:first-child {{
+            background: rgba(255,255,255,.10);
+            border: 0;
+            width: 3rem;
+            height: 1.8rem;
             border-radius: 999px;
-            padding: .15rem;
-            background: var(--ts-surface);
+            transition: background-color .18s ease;
         }}
-        [data-testid='stSegmentedControl'] [role='radio'] {{
-            border-radius: 999px;
-            min-height: 2.2rem;
-            padding: 0 .9rem;
-        }}
-        [data-testid='stSegmentedControl'] [role='radio'][aria-checked='true'] {{
+        .st-key-theme-dark-enabled [data-baseweb='checkbox'] input:checked + div,
+        .st-key-theme-dark-enabled [data-baseweb='checkbox'][aria-checked='true'] > div:first-child {{
             background: var(--ts-accent);
-            color: white;
+        }}
+        .st-key-theme-dark-enabled [data-baseweb='checkbox'] > div:first-child > div {{
+            width: 1.3rem;
+            height: 1.3rem;
+            background: #f2eee6;
+            border: 0;
         }}
         .stButton > button, .stDownloadButton > button {{
             min-height: 3.25rem;
@@ -230,14 +261,31 @@ def install_theme(theme: str) -> None:
             font-size: .86rem;
             margin-top: .3rem;
         }}
+        details[data-testid='stExpander'] {{
+            border: 1px solid var(--ts-rule);
+            border-radius: .45rem;
+            background: rgba(255,255,255,.02);
+            margin-top: .55rem;
+        }}
+        details[data-testid='stExpander'] summary {{
+            padding: .8rem 1rem;
+        }}
+        details[data-testid='stExpander'] > div {{
+            padding: 0 .95rem .9rem;
+        }}
         div[data-testid='stAlert'] {{ background: var(--ts-surface-2); border-color: var(--ts-rule); color: var(--ts-text); }}
         @media (max-width: 800px) {{
-            .block-container {{ padding: 1.35rem 1.1rem 2rem; }}
-            .ts-rule {{ margin-bottom: 1.8rem; }}
-            .ts-hero h1 {{ font-size: 2.75rem; }}
-            [data-testid='stSegmentedControl'] {{ justify-content: flex-start; }}
-            [data-testid='stSegmentedControl'] [role='radio'] {{ padding: 0 .72rem; }}
-            [data-testid='stColumn']:has(.ts-rail-marker) {{ border-left: 0; border-top: 1px solid var(--ts-rule); padding: 1.5rem 0 0; margin-top: 1rem; }}
+            .block-container {{ padding: .9rem 1rem 1.7rem; }}
+            .ts-brand {{ font-size: 1.85rem; }}
+            .ts-theme-label {{ font-size: .64rem; letter-spacing: .08em; }}
+            .st-key-theme-switch-row {{ gap: .55rem; }}
+            .ts-rule {{ margin: .45rem 0 1.2rem; }}
+            .ts-hero h1 {{ font-size: 2.15rem; margin-bottom: .5rem; }}
+            .ts-hero p {{ font-size: .98rem; margin-bottom: 1rem; }}
+            [data-testid='stTextArea'] textarea {{ min-height: 8.75rem !important; }}
+            [data-testid='stFileUploaderDropzone'] {{ min-height: 5rem; }}
+            [data-testid='stRadio'] label {{ min-height: 3.35rem; padding: .58rem .7rem; }}
+            [data-testid='stColumn']:has(.ts-rail-marker) {{ border-left: 0; border-top: 1px solid var(--ts-rule); padding: 1rem 0 0; margin-top: .65rem; }}
             .ts-footer {{ gap: 1rem; align-items: flex-start; flex-direction: column; }}
         }}
         @media (prefers-reduced-motion: reduce) {{ * {{ transition: none !important; }} }}
@@ -293,23 +341,26 @@ def show_gemini_help_dialog() -> None:
 
 if "theme" not in st.session_state:
     st.session_state.theme = "dark"
-if "theme_choice" not in st.session_state:
-    st.session_state.theme_choice = "Dark" if st.session_state.theme == "dark" else "Light"
+if "theme_dark_enabled" not in st.session_state:
+    st.session_state.theme_dark_enabled = st.session_state.theme == "dark"
 if "show_gemini_help" not in st.session_state:
     st.session_state.show_gemini_help = False
 
-header_left, header_right = st.columns([6.5, 3.5], vertical_alignment="center")
+header_left, header_right = st.columns([7.4, 2.6], vertical_alignment="center")
 with header_left:
     st.markdown('<div class="ts-brand">pdf-it</div>', unsafe_allow_html=True)
 with header_right:
-    selected_theme = st.segmented_control(
-        "Theme mode",
-        ("Light", "Dark"),
-        key="theme_choice",
-        label_visibility="collapsed",
-        width="content",
-    )
-    st.session_state.theme = (selected_theme or "Dark").lower()
+    with st.container(key="theme-switch-row"):
+        st.markdown(
+            f'<div class="ts-theme-label {"is-active" if not st.session_state.theme_dark_enabled else ""}">Light</div>',
+            unsafe_allow_html=True,
+        )
+        st.toggle("Theme mode", key="theme_dark_enabled", label_visibility="collapsed")
+        st.markdown(
+            f'<div class="ts-theme-label {"is-active" if st.session_state.theme_dark_enabled else ""}">Dark</div>',
+            unsafe_allow_html=True,
+        )
+    st.session_state.theme = "dark" if st.session_state.theme_dark_enabled else "light"
 
 install_theme(st.session_state.theme)
 if st.session_state.show_gemini_help:
@@ -329,7 +380,7 @@ editor, rail = st.columns([1.72, 0.88], gap="large", vertical_alignment="top")
 with editor:
     typed_text = st.text_area(
         "Source text",
-        height=270,
+        height=220,
         max_chars=MAX_SOURCE_CHARACTERS,
         placeholder="Paste your text here...",
         help=(
@@ -352,19 +403,23 @@ with editor:
     st.caption(
         f"{len(uploaded_files)} / {MAX_SOURCE_UPLOADS} files selected • {UPLOAD_SIZE_MB} MB each • {UPLOAD_FORMAT_SUMMARY}"
     )
-    youtube_links = st.text_area(
-        "YouTube transcript links (optional)",
-        height=96,
-        placeholder="Paste up to 5 YouTube links, one per line...",
-        help="pdf-it will try to pull captions or auto-generated transcripts from the provided links.",
-    )
-    st.caption(f"Up to {MAX_YOUTUBE_LINKS} YouTube links can be imported per document.")
-    instructions = st.text_area(
-        "Creative direction (optional)",
-        height=128,
-        max_chars=MAX_INSTRUCTIONS_CHARACTERS,
-        placeholder="Describe the audience, tone, structure, or emphasis...",
-    )
+    with st.expander("YouTube transcript links (optional)", expanded=False):
+        youtube_links = st.text_area(
+            "YouTube transcript links (optional)",
+            height=96,
+            placeholder="Paste up to 5 YouTube links, one per line...",
+            help="pdf-it will try to pull captions or auto-generated transcripts from the provided links.",
+            label_visibility="collapsed",
+        )
+        st.caption(f"Up to {MAX_YOUTUBE_LINKS} YouTube links can be imported per document.")
+    with st.expander("Creative direction (optional)", expanded=False):
+        instructions = st.text_area(
+            "Creative direction (optional)",
+            height=116,
+            max_chars=MAX_INSTRUCTIONS_CHARACTERS,
+            placeholder="Describe the audience, tone, structure, or emphasis...",
+            label_visibility="collapsed",
+        )
 
 with rail:
     st.markdown('<span class="ts-rail-marker"></span>', unsafe_allow_html=True)

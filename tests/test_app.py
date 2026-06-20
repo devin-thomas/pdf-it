@@ -23,10 +23,10 @@ def test_source_and_key_enable_generation() -> None:
 
 def test_theme_toggle_updates_session() -> None:
     app = AppTest.from_file("app.py").run(timeout=20)
-    assert app.segmented_control[0].value == "Dark"
-    app.segmented_control[0].set_value("Light")
+    assert app.toggle[0].value is True
+    app.toggle[0].set_value(False)
     app.run(timeout=20)
     assert app.session_state.theme == "light"
-    app.segmented_control[0].set_value("Dark")
+    app.toggle[0].set_value(True)
     app.run(timeout=20)
     assert app.session_state.theme == "dark"
