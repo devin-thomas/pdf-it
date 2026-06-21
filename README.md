@@ -1,8 +1,8 @@
 # pdf-it
 
 pdf-it turns mixed source material into a structured, visually polished PDF. Users can combine
-free text, up to 5 uploaded files, and YouTube transcript links; LangChain requests a validated
-editorial plan, then ReportLab renders the document locally and deterministically.
+free text, up to 5 uploaded files, and YouTube transcript links or video IDs; LangChain requests
+a validated editorial plan, then ReportLab renders the document locally and deterministically.
 
 The name is a light play on “f*** it”: drop in the text, choose a provider, and make the PDF.
 
@@ -12,7 +12,7 @@ The name is a light play on “f*** it”: drop in the text, choose a provider, 
 
 - Accepts pasted text plus up to 5 uploaded files in one request.
 - Supports TXT, Markdown, PDF, DOCX, GDOC, CSV, XLSX, common code files, and audio uploads.
-- Pulls YouTube transcripts from captioned links when available.
+- Pulls YouTube transcripts from captioned links or raw video IDs when available.
 - Adds optional audience, tone, structure, and emphasis guidance.
 - Lets users choose a provider-specific model in the UI.
 - Supports Gemini, OpenAI, and Claude through separate LangChain integrations.

@@ -89,6 +89,10 @@ UNSUPPORTED_CODE_EXTENSIONS = {
     ".vb",
 }
 
+YOUTUBE_VIDEO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
+YOUTUBE_SHORT_HOSTS = {"youtu.be", "www.youtu.be"}
+YOUTUBE_HOST_SUFFIXES = ("youtube.com", "youtube-nocookie.com")
+
 
 @dataclass(frozen=True)
 class SourceUpload:
@@ -123,7 +127,9 @@ def prepare_source_text(
     if len(uploads) > MAX_SOURCE_UPLOADS:
         raise InputValidationError(f"Add at most {MAX_SOURCE_UPLOADS} uploaded files at once.")
     if len(cleaned_urls) > MAX_YOUTUBE_LINKS:
-        raise InputValidationError(f"Add at most {MAX_YOUTUBE_LINKS} YouTube links at once.")
+        raise InputValidationError(
+            f"Add at most {MAX_YOUTUBE_LINKS} YouTube links or video IDs at once."
+        )
 
     segments: list[SourceSegment] = []
     if typed_text.strip():
@@ -474,11 +480,13 @@ def transcribe_audio(
     )
 
 
-def fetch_youtube_transcript(url: str) -> str:
-    """Fetch a YouTube transcript when captions are available."""
-    video_id = extract_youtube_video_id(url)
+def fetch_youtube_transcript(video_input: str) -> str:
+    """Fetch a YouTube transcript when public captions are available."""
+    video_id = extract_youtube_video_id(video_input)
     if not video_id:
-        raise InputValidationError("Enter a valid YouTube video link to import a transcript.")
+        raise InputValidationError(
+            "Enter a valid YouTube link or 11-character video ID to import a transcript."
+        )
 
     api = YouTubeTranscriptApi()
     try:
@@ -498,9 +506,18 @@ def fetch_youtube_transcript(url: str) -> str:
                 "No usable YouTube transcript was available for that video. If you have "
                 "a transcript file, upload it directly."
             ) from exc
-    except (TranscriptsDisabled, VideoUnavailable, YouTubeTranscriptApiException) as exc:
+    except TranscriptsDisabled as exc:
         raise InputValidationError(
-            "pdf-it could not fetch a transcript from that YouTube link. If captions "
+            "pdf-it could not find public captions for that YouTube video. Paste or "
+            "upload the transcript text directly, or upload audio for transcription."
+        ) from exc
+    except VideoUnavailable as exc:
+        raise InputValidationError(
+            "That YouTube video is unavailable. Check the link or video ID and try again."
+        ) from exc
+    except YouTubeTranscriptApiException as exc:
+        raise InputValidationError(
+            "pdf-it could not fetch a transcript from YouTube right now. If captions "
             "exist elsewhere, upload the transcript text directly."
         ) from exc
 
@@ -520,17 +537,37 @@ def extract_google_doc_id(url: str) -> str | None:
     return match.group(1) if match else None
 
 
-def extract_youtube_video_id(url: str) -> str | None:
-    """Extract a YouTube video id from common URL shapes."""
-    parsed = urlparse(url)
-    if parsed.netloc in {"youtu.be", "www.youtu.be"}:
-        return parsed.path.lstrip("/") or None
-    if parsed.netloc.endswith("youtube.com"):
-        if parsed.path == "/watch":
-            return parse_qs(parsed.query).get("v", [None])[0]
-        parts = [part for part in parsed.path.split("/") if part]
-        if len(parts) >= 2 and parts[0] in {"embed", "shorts", "live"}:
-            return parts[1]
+def extract_youtube_video_id(value: str) -> str | None:
+    """Extract a YouTube video id from common URL shapes or a raw 11-character id."""
+    cleaned = value.strip()
+    if YOUTUBE_VIDEO_ID_PATTERN.fullmatch(cleaned):
+        return cleaned
+
+    candidate = cleaned
+    lower_candidate = candidate.lower()
+    if "://" not in candidate and (
+        lower_candidate.startswith(("youtube.com/", "www.youtube.com/", "m.youtube.com/"))
+        or lower_candidate.startswith(("music.youtube.com/", "youtu.be/", "www.youtu.be/"))
+    ):
+        candidate = f"https://{candidate}"
+
+    parsed = urlparse(candidate)
+    host = parsed.netloc.lower().split(":", 1)[0]
+    video_id: str | None = None
+
+    if host in YOUTUBE_SHORT_HOSTS:
+        video_id = next((part for part in parsed.path.split("/") if part), None)
+    elif host.endswith(YOUTUBE_HOST_SUFFIXES):
+        if parsed.path.rstrip("/") == "/watch":
+            query = parse_qs(parsed.query)
+            video_id = query.get("v", [None])[0] or query.get("vi", [None])[0]
+        else:
+            parts = [part for part in parsed.path.split("/") if part]
+            if len(parts) >= 2 and parts[0] in {"embed", "shorts", "live", "v"}:
+                video_id = parts[1]
+
+    if video_id and YOUTUBE_VIDEO_ID_PATTERN.fullmatch(video_id):
+        return video_id
     return None
 
 

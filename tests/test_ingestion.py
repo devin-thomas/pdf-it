@@ -3,11 +3,13 @@ import io
 import pytest
 from docx import Document
 from reportlab.pdfgen import canvas
+from youtube_transcript_api._errors import TranscriptsDisabled
 
 from pdf_it.config import MAX_SOURCE_CHARACTERS, Provider
 from pdf_it.ingestion import (
     SourceUpload,
     extract_upload_text,
+    extract_youtube_video_id,
     fetch_youtube_transcript,
     prepare_source_text,
 )
@@ -154,19 +156,52 @@ def test_claude_audio_uploads_require_a_supported_transcription_provider() -> No
 
 
 def test_fetch_youtube_transcript_uses_api(monkeypatch: pytest.MonkeyPatch) -> None:
+    video_id = "abc123def45"
+
     class FakeTranscript:
         def to_raw_data(self) -> list[dict[str, str]]:
             return [{"text": "First line"}, {"text": "Second line"}]
 
     class FakeApi:
         def fetch(self, video_id: str, languages) -> FakeTranscript:
-            assert video_id == "abc123"
+            assert video_id == "abc123def45"
             return FakeTranscript()
 
     monkeypatch.setattr("pdf_it.ingestion.YouTubeTranscriptApi", lambda: FakeApi())
-    result = fetch_youtube_transcript("https://www.youtube.com/watch?v=abc123")
+    result = fetch_youtube_transcript(f"https://www.youtube.com/watch?v={video_id}")
 
     assert result == "First line\nSecond line"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("dL2xePN0GRU", "dL2xePN0GRU"),
+        ("https://www.youtube.com/watch?v=dL2xePN0GRU", "dL2xePN0GRU"),
+        ("https://m.youtube.com/watch?v=dL2xePN0GRU", "dL2xePN0GRU"),
+        ("https://youtu.be/dL2xePN0GRU", "dL2xePN0GRU"),
+        ("www.youtube.com/watch?v=dL2xePN0GRU", "dL2xePN0GRU"),
+        ("https://youtube.com/shorts/dL2xePN0GRU?feature=share", "dL2xePN0GRU"),
+    ],
+)
+def test_extract_youtube_video_id_accepts_common_links_and_raw_ids(
+    value: str,
+    expected: str,
+) -> None:
+    assert extract_youtube_video_id(value) == expected
+
+
+def test_fetch_youtube_transcript_reports_missing_public_captions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeApi:
+        def fetch(self, video_id: str, languages) -> None:
+            raise TranscriptsDisabled(video_id)
+
+    monkeypatch.setattr("pdf_it.ingestion.YouTubeTranscriptApi", lambda: FakeApi())
+
+    with pytest.raises(InputValidationError, match="public captions"):
+        fetch_youtube_transcript("dL2xePN0GRU")
 
 
 def test_prepare_source_text_limits_uploaded_file_count() -> None:
