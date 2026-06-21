@@ -403,15 +403,20 @@ with editor:
     st.caption(
         f"{len(uploaded_files)} / {MAX_SOURCE_UPLOADS} files selected • {UPLOAD_SIZE_MB} MB each • {UPLOAD_FORMAT_SUMMARY}"
     )
-    with st.expander("YouTube transcript links (optional)", expanded=False):
+    with st.expander("YouTube transcript links or IDs (optional)", expanded=False):
         youtube_links = st.text_area(
-            "YouTube transcript links (optional)",
+            "YouTube transcript links or IDs (optional)",
             height=96,
-            placeholder="Paste up to 5 YouTube links, one per line...",
-            help="pdf-it will try to pull captions or auto-generated transcripts from the provided links.",
+            placeholder="Paste up to 5 YouTube links or 11-character video IDs, one per line...",
+            help=(
+                "pdf-it will try to pull public captions or auto-generated transcripts "
+                "from the provided YouTube links or video IDs."
+            ),
             label_visibility="collapsed",
         )
-        st.caption(f"Up to {MAX_YOUTUBE_LINKS} YouTube links can be imported per document.")
+        st.caption(
+            f"Up to {MAX_YOUTUBE_LINKS} YouTube links or video IDs can be imported per document."
+        )
     with st.expander("Creative direction (optional)", expanded=False):
         instructions = st.text_area(
             "Creative direction (optional)",
