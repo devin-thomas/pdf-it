@@ -1,6 +1,17 @@
 """Validated structures shared by the language-model and PDF layers."""
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class DocumentBlock(BaseModel):
+    """A paragraph or code block that preserves the original section order."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["paragraph", "code"]
+    text: str = Field(min_length=1, max_length=8_000)
 
 
 class DocumentSection(BaseModel):
@@ -9,7 +20,7 @@ class DocumentSection(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     heading: str = Field(min_length=1, max_length=120)
-    paragraphs: list[str] = Field(min_length=1, max_length=8)
+    blocks: list[DocumentBlock] = Field(min_length=1, max_length=12)
     callout: str | None = Field(default=None, max_length=350)
 
 

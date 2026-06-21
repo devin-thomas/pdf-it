@@ -26,7 +26,7 @@ Current defaults are centralized in `src/pdf_it/config.py`:
 
 | Provider | Model |
 | --- | --- |
-| Gemini | `gemini-3.5-flash` |
+| Gemini | `gemini-3.1-flash-lite` |
 | OpenAI | `gpt-5.4-mini` |
 | Anthropic | `claude-sonnet-4-6` |
 

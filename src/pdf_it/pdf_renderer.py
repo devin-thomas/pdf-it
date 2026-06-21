@@ -11,15 +11,15 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import (
-    KeepTogether,
     Paragraph,
+    Preformatted,
     SimpleDocTemplate,
     Spacer,
     Table,
     TableStyle,
 )
 
-from .schemas import DocumentPlan
+from .schemas import DocumentBlock, DocumentPlan
 
 INK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -27,6 +27,9 @@ ACCENT = colors.HexColor("#2F6DF6")
 PALE_ACCENT = colors.HexColor("#EDF3FF")
 RULE = colors.HexColor("#DCE2EC")
 PAPER = colors.HexColor("#FFFFFF")
+CODE_SURFACE = colors.HexColor("#F5F7FB")
+CODE_RULE = colors.HexColor("#D4DBE8")
+CODE_WRAP_COLUMNS = 88
 
 
 def _markup(text: str) -> str:
@@ -85,6 +88,22 @@ def _styles() -> dict[str, ParagraphStyle]:
             spaceAfter=3.5 * mm,
             allowWidows=0,
             allowOrphans=0,
+        ),
+        "code": ParagraphStyle(
+            "PdfItCode",
+            parent=base["Code"],
+            fontName="Courier",
+            fontSize=8.6,
+            leading=11.2,
+            textColor=INK,
+            leftIndent=3 * mm,
+            rightIndent=3 * mm,
+            borderWidth=0.6,
+            borderColor=CODE_RULE,
+            borderPadding=4.5 * mm,
+            backColor=CODE_SURFACE,
+            spaceBefore=1.5 * mm,
+            spaceAfter=3 * mm,
         ),
         "callout": ParagraphStyle(
             "PdfItCallout",
@@ -165,6 +184,12 @@ def _callout_block(text: str, style: ParagraphStyle, content_width: float) -> Ta
     return callout
 
 
+def _render_block(block: DocumentBlock, styles: dict[str, ParagraphStyle]):
+    if block.kind == "code":
+        return Preformatted(block.text, styles["code"], maxLineLength=CODE_WRAP_COLUMNS)
+    return Paragraph(_markup(block.text), styles["body"])
+
+
 def render_document(plan: DocumentPlan) -> bytes:
     """Render a polished A4 PDF entirely in memory."""
     buffer = BytesIO()
@@ -196,16 +221,8 @@ def render_document(plan: DocumentPlan) -> bytes:
         )
 
     for section in plan.sections:
-        first_paragraph = Paragraph(_markup(section.paragraphs[0]), styles["body"])
-        story.append(
-            KeepTogether(
-                [Paragraph(_markup(section.heading), styles["heading"]), first_paragraph]
-            )
-        )
-        story.extend(
-            Paragraph(_markup(paragraph), styles["body"])
-            for paragraph in section.paragraphs[1:]
-        )
+        story.append(Paragraph(_markup(section.heading), styles["heading"]))
+        story.extend(_render_block(block, styles) for block in section.blocks)
         if section.callout:
             story.extend(
                 [

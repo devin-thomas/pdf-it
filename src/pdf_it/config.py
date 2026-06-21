@@ -37,17 +37,20 @@ class ProviderConfig:
 
 PROVIDER_CONFIGS = {
     Provider.GEMINI: ProviderConfig(
-        default_model="gemini-3.5-flash",
+        default_model="gemini-3.1-flash-lite",
         models=(
+            ModelOption(
+                id="gemini-3.1-flash-lite",
+                label="Gemini 3.1 Flash Lite",
+                description="Default Gemini option for fast, lower-cost document shaping.",
+            ),
             ModelOption(
                 id="gemini-3.5-flash",
                 label="Gemini 3.5 Flash",
-                description="Best default for fast, high-quality document shaping.",
-            ),
-            ModelOption(
-                id="gemini-3.1-flash-lite",
-                label="Gemini 3.1 Flash-Lite",
-                description="Lower-cost Gemini option for shorter or simpler source material.",
+                description=(
+                    "Higher-quality Gemini flash model for broader mixed-source"
+                    " packets."
+                ),
             ),
             ModelOption(
                 id="gemini-2.5-pro",

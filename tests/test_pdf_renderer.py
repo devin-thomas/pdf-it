@@ -3,7 +3,7 @@ from io import BytesIO
 from pypdf import PdfReader
 
 from pdf_it.pdf_renderer import render_document
-from pdf_it.schemas import DocumentPlan, DocumentSection
+from pdf_it.schemas import DocumentBlock, DocumentPlan, DocumentSection
 
 
 def test_pdf_is_valid_searchable_and_escapes_markup() -> None:
@@ -14,14 +14,33 @@ def test_pdf_is_valid_searchable_and_escapes_markup() -> None:
         sections=[
             DocumentSection(
                 heading="Evidence",
-                paragraphs=[
-                    "Literal tags like <b>source text</b> stay literal and searchable."
+                blocks=[
+                    DocumentBlock(
+                        kind="paragraph",
+                        text=(
+                            "Literal tags like <b>source text</b> stay literal"
+                            " and searchable."
+                        ),
+                    ),
+                    DocumentBlock(
+                        kind="code",
+                        text=(
+                            "def keep_literal(value):\n"
+                            "    if value < 10:\n"
+                            "        return value"
+                        ),
+                    ),
                 ],
                 callout="Keep the strongest supported conclusion in view.",
             ),
             DocumentSection(
                 heading="Next steps",
-                paragraphs=["Validate the conclusion with the original material."],
+                blocks=[
+                    DocumentBlock(
+                        kind="paragraph",
+                        text="Validate the conclusion with the original material.",
+                    )
+                ],
             ),
         ],
     )
@@ -35,7 +54,10 @@ def test_pdf_is_valid_searchable_and_escapes_markup() -> None:
     assert reader.metadata.author == "pdf-it"
     assert "Research & Results <2026>" in text
     assert "<b>source text</b>" in text
+    assert "def keep_literal(value):" in text
+    assert "return value" in text
     assert "Next steps" in text
+    assert b"Courier" in payload
     assert all(
         (page.mediabox.width, page.mediabox.height) == (595.2756, 841.8898)
         for page in reader.pages
@@ -50,7 +72,13 @@ def test_long_document_paginates_with_page_labels() -> None:
     plan = DocumentPlan(
         title="Long-form report",
         sections=[
-            DocumentSection(heading="Detailed analysis", paragraphs=paragraphs[:8])
+            DocumentSection(
+                heading="Detailed analysis",
+                blocks=[
+                    DocumentBlock(kind="paragraph", text=paragraph)
+                    for paragraph in paragraphs[:8]
+                ],
+            )
             for _ in range(3)
         ],
     )

@@ -1,6 +1,6 @@
 from pdf_it.config import Provider
 from pdf_it.ingestion import SourceUpload
-from pdf_it.schemas import DocumentPlan, DocumentSection
+from pdf_it.schemas import DocumentBlock, DocumentPlan, DocumentSection
 from pdf_it.service import create_document_plan, create_pdf_from_sources, create_pdf_from_text
 
 
@@ -12,7 +12,12 @@ def sample_plan() -> DocumentPlan:
         sections=[
             DocumentSection(
                 heading="First section",
-                paragraphs=["A preserved fact and its explanation."],
+                blocks=[
+                    DocumentBlock(
+                        kind="paragraph",
+                        text="A preserved fact and its explanation.",
+                    )
+                ],
                 callout="The important point.",
             )
         ],

@@ -1,6 +1,6 @@
 import pytest
 
-from pdf_it.config import Provider
+from pdf_it.config import PROVIDER_CONFIGS, Provider
 from pdf_it.providers import ProviderRequestError, build_chat_model, safe_provider_error
 
 
@@ -43,3 +43,7 @@ def test_missing_key_and_safe_errors_do_not_reflect_provider_details() -> None:
 
     model_error = RuntimeError("model access denied for gpt-5.5")
     assert "selected model" in str(safe_provider_error(model_error))
+
+
+def test_gemini_default_model_is_flash_lite() -> None:
+    assert PROVIDER_CONFIGS[Provider.GEMINI].default_model == "gemini-3.1-flash-lite"
