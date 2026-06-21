@@ -72,5 +72,8 @@ def safe_provider_error(exc: Exception) -> ProviderRequestError:
     elif any(term in message for term in ("timeout", "timed out")):
         detail = "The provider took too long to respond. Please try again."
     else:
-        detail = "The provider could not create the document plan. Please try again."
+        detail = (
+            "Your source import may have succeeded, but the provider could not create "
+            "the document plan. Please try again."
+        )
     return ProviderRequestError(detail)
