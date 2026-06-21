@@ -43,6 +43,8 @@ def test_missing_key_and_safe_errors_do_not_reflect_provider_details() -> None:
 
     model_error = RuntimeError("model access denied for gpt-5.5")
     assert "selected model" in str(safe_provider_error(model_error))
+    generic = safe_provider_error(RuntimeError("unexpected upstream issue"))
+    assert "source import may have succeeded" in str(generic)
 
 
 def test_gemini_default_model_is_flash_lite() -> None:

@@ -177,9 +177,13 @@ def test_fetch_youtube_transcript_uses_api(monkeypatch: pytest.MonkeyPatch) -> N
     ("value", "expected"),
     [
         ("dL2xePN0GRU", "dL2xePN0GRU"),
+        ("e-GR3PlEOVU", "e-GR3PlEOVU"),
         ("https://www.youtube.com/watch?v=dL2xePN0GRU", "dL2xePN0GRU"),
         ("https://m.youtube.com/watch?v=dL2xePN0GRU", "dL2xePN0GRU"),
         ("https://youtu.be/dL2xePN0GRU", "dL2xePN0GRU"),
+        ("https://www.youtube.com/watch?v=e-GR3PlEOVU", "e-GR3PlEOVU"),
+        ("https://m.youtube.com/watch?v=e-GR3PlEOVU", "e-GR3PlEOVU"),
+        ("https://youtu.be/e-GR3PlEOVU", "e-GR3PlEOVU"),
         ("www.youtube.com/watch?v=dL2xePN0GRU", "dL2xePN0GRU"),
         ("https://youtube.com/shorts/dL2xePN0GRU?feature=share", "dL2xePN0GRU"),
     ],
