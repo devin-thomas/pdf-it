@@ -110,6 +110,7 @@ class SourceSegment:
 class PreparedSources:
     source: str
     source_count: int
+    used_local_plan: bool = False
 
 
 def prepare_source_text(
