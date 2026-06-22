@@ -489,14 +489,19 @@ with rail:
 
     youtube_url_list = [line.strip() for line in youtube_links.splitlines() if line.strip()]
     has_source = bool(typed_text.strip() or uploaded_files or youtube_url_list)
+    can_create = has_source and bool(api_key.strip() or youtube_url_list)
     create_clicked = st.button(
         "Create PDF",
         type="primary",
         use_container_width=True,
-        disabled=not (has_source and api_key.strip()),
+        disabled=not can_create,
     )
-    if not has_source or not api_key.strip():
+    if not has_source:
         st.caption("Add source text and an API key to get started.")
+    elif not api_key.strip() and youtube_url_list:
+        st.caption("YouTube transcripts can be rendered locally without an API key.")
+    elif not api_key.strip():
+        st.caption("Add an API key to create the PDF.")
 
 if create_clicked:
     progress_bar = st.progress(0, text="Preparing your document request...")
@@ -513,7 +518,7 @@ if create_clicked:
         uploads = [
             SourceUpload(name=uploaded.name, data=uploaded.getvalue()) for uploaded in uploaded_files
         ]
-        pdf_bytes, plan, _prepared = create_pdf_from_sources(
+        pdf_bytes, plan, prepared = create_pdf_from_sources(
             typed_text,
             uploads,
             youtube_url_list,
@@ -526,9 +531,20 @@ if create_clicked:
         st.session_state.generated_pdf = pdf_bytes
         st.session_state.generated_filename = safe_filename(plan.title)
         st.session_state.generated_title = plan.title
+        st.session_state.generated_notice = (
+            "The transcript was imported successfully and rendered locally because AI "
+            "planning was unavailable."
+            if prepared.used_local_plan
+            else None
+        )
         progress_bar.progress(100, text="PDF ready.")
+        completion_message = (
+            "The caption import and local PDF rendering are complete."
+            if prepared.used_local_plan
+            else "The source review, AI planning, and PDF rendering are complete."
+        )
         progress_note.markdown(
-            '<div class="ts-progress-note">The source review, AI planning, and PDF rendering are complete.</div>',
+            f'<div class="ts-progress-note">{completion_message}</div>',
             unsafe_allow_html=True,
         )
     except (InputValidationError, ProviderRequestError) as exc:
@@ -543,6 +559,8 @@ if create_clicked:
 
 if st.session_state.get("generated_pdf"):
     st.success(f"{st.session_state.generated_title} is ready.")
+    if st.session_state.get("generated_notice"):
+        st.info(st.session_state.generated_notice)
     st.download_button(
         "Download PDF",
         data=st.session_state.generated_pdf,
